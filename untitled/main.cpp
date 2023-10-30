@@ -1,85 +1,68 @@
 #include<bits/stdc++.h>
-#include <fstream>
 using namespace std;
+typedef pair<int,int> pii;
 
-int n,m;
-const int N = 1e5+10;
-long long arr[N];
-long long diff[N];
-long long sum[N*4];
-long long lazy[N*4];
-
-void Pushup(int rt){
-    sum[rt] = sum[rt<<1]+sum[rt<<1|1];
+int dis[10001];
+int arr[10001];
+int n,m,s,idx=1;
+const int N = 1e4+10,M = 1e5+10;
+int h[N],e[M],w[M],ne[M];
+void add(int a,int b,int c)
+{
+    e[idx] = b,w[idx] = c,ne[idx] = h[a],h[a] = idx++;
 }
-void Pushdown(int ln,int rn,int rt){
-    if (lazy[rt]!= 0){
-        sum[rt<<1] += lazy[rt]*ln;
-        lazy[rt<<1] += lazy[rt];
-        sum[rt<<1|1] += lazy[rt]*rn;
-        lazy[rt<<1|1] += lazy[rt];
-        lazy[rt] = 0;
+int Dijkstra(int x){
+    priority_queue<pii,vector<pii>,greater<pii>> pq;
+    pq.push({0,1});
+    memset(dis,0x3f3f3f3f,10001*sizeof(int));
+    dis[1] = 0;
+    while (!pq.empty()){
+        auto t = pq.top();
+        pq.pop();
+        if (t.first>dis[t.second]||arr[t.second]>x){
+            continue;
+        }
+        for (int i = h[t.second]; i!= -1 ; i=ne[i]) {
+            int w1 = w[i];int j = e[i];
+            if (dis[j]>t.first+w1&&arr[j]<=x){
+                dis[j] = t.first+w1;
+                pq.push({dis[j],j});
+            }
+        }
     }
-}
-void Build(int l,int r,int rt){
-    if (l == r){
-        sum[rt] = diff[l];
-        return;
-    }
-    int m = (l+r)>>1;
-    Build(l,m,rt<<1);
-    Build(m+1,r,rt<<1|1);
-    Pushup(rt);
-}
-void add(int L,int R,int l,int r,int rt,int d){
-    if (L<=l&&r<=R){
-        sum[rt] += (r-l+1)*d;
-        lazy[rt] += d;
-        return;
-    }
-    int m = (l+r)>>1;
-    Pushdown(m-l+1,r-m,rt);
-    if (L<=m){ add(L,R,l,m,rt<<1,d);}
-    if (R>m){ add(L,R,m+1,r,rt<<1|1,d);}
-    Pushup(rt);
-    return;
-}
-long long Query(int L,int R,int l,int r,int rt){
-    if (L<=l&&r<=R){
-        return sum[rt];
-    }
-    int m = (l+r)>>1;
-    Pushdown(m-l+1,r-m,rt);
-    long long ans = 0;
-    if (L<=m){ans += Query(L,R,l,m,rt<<1);}
-    if (R>m){ans += Query(L,R,m+1,r,rt<<1|1);}
-    return ans;
+    return dis[n];
 }
 int main(){
-    ios::sync_with_stdio(false);
-    cin >> n >> m;
+    cin >> n >> m >> s;
+    h[0] = -1;ne[0] = -1;
+    int a,b,c;
     for (int i = 1; i <= n; ++i) {
         cin >> arr[i];
     }
-    diff[1] = arr[1];
-    for (int i = 2; i <= n; ++i) {
-        diff[i] = arr[i]-arr[i-1];
-    }
-    Build(1,n,1);
-    int opt;
-    int l,r,k,d,p;
     for (int i = 0; i < m; ++i) {
-        cin >> opt;
-        if (opt==1){
-            cin >> l >> r >> k >> d;
-            add(l,l,1,n,1,k);
-            if (l+1<=r){
-                add(l+1,r,1,n,1,d);
-            }
-            if (r<n){ add(r+1,r+1,1,n,1,-(k+d*(r-l)));}
-        } else{
-            cin >> p;
-            cout << Query(1,p,1,n,1) << endl;
+        cin >> a >> b >> c;
+        add(b,a,c);
+        add(a,b,c);
+    }
+    int r = arr[1];
+    for (int i = 0; i < n; ++i) {
+        if (r<arr[i+1]){
+            r = arr[i+1];
         }
     }
+    if (Dijkstra(r)>s){
+        cout << "AFK" << endl;
+        return 0;
+    }
+    int l = 1,mid,ans;
+    while (l<=r){
+        mid = (l+r)/2;
+        if (Dijkstra(mid)<=s){
+            ans = mid;
+            r = mid-1;
+        } else{
+            l = mid+1;
+        }
+    }
+    cout << ans << endl;
 }

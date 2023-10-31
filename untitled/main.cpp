@@ -67,5 +67,4 @@ int main(){
     cout << ans << endl;
     cout << "WWW" << endl;
     cout << "AAA" << endl;
-    cout << "WWW" << endl;
 }
